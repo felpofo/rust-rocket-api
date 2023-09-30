@@ -6,5 +6,6 @@ authors.workspace = true
 
 [workspace]
 package.authors = ["felpofo <felpofo@proton.me>"]
+members = ["twitter-crud"]
 
 [dependencies]

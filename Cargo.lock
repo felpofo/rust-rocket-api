@@ -5,3 +5,7 @@ version = 3
 [[package]]
 name = "api"
 version = "0.1.0"
+
+[[package]]
+name = "twitter-crud"
+version = "0.1.0"
