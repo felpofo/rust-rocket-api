@@ -8,4 +8,5 @@ authors.workspace = true
 package.authors = ["felpofo <felpofo@proton.me>"]
 members = ["twitter-crud"]
 
-[dependencies]
+[workspace.dependencies]
+rocket = "=0.5.0-rc.3"
