@@ -1,14 +1,20 @@
 use rocket::serde::{Serialize, Deserialize};
 use rocket_db_pools::Database;
-use rocket_db_pools::sqlx::{self, Row, sqlite::SqliteRow};
+use rocket_db_pools::sqlx::{SqlitePool, Row, sqlite::SqliteRow};
 use chrono::NaiveDateTime;
 use uuid::Uuid;
 
 pub const SQLITE_DATE_FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
 
+#[cfg(not(test))]
 #[derive(Database)]
 #[database("twitter")]
-pub struct Pool(pub sqlx::SqlitePool);
+pub struct Pool(pub SqlitePool);
+
+#[cfg(test)]
+#[derive(Database)]
+#[database("fake")]
+pub struct Pool(SqlitePool);
 
 pub mod entities {
     use super::*;
