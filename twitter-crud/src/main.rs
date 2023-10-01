@@ -27,7 +27,7 @@ mod tests {
         let client = Client::tracked(super::rocket()).expect("valid rocket instance");
 
         let response = client
-            .get(uri!("/"))
+            .get("/")
             .dispatch();
 
         assert_eq!(response.status(), Status::Ok);
@@ -39,7 +39,7 @@ mod tests {
         let client = Client::tracked(super::rocket()).expect("valid rocket instance");
 
         let response = client
-            .get(uri!("/users"))
+            .get("/users")
             .dispatch();
 
         assert_eq!(response.status(), Status::Ok);
@@ -55,18 +55,18 @@ mod tests {
             .expect("valid rocket instance");
 
         let response = client
-            .post(uri!("/users"))
+            .post("/users")
             .header(ContentType::JSON)
-            .body(r#"{"username":"test"}"#)
+            .body(r#"{"username":"before"}"#)
             .dispatch();
 
         assert_eq!(response.status(), Status::Created);
         assert!(response.body().is_some());
-        
-        let user = response.into_json::<User>().unwrap();
+
+        let user: User = response.into_json().unwrap();
 
         assert!(user.id.len() == 36);
-        assert_eq!(user.username, "test");
+        assert_eq!(user.username, "before");
     }
 
     #[test]
@@ -76,16 +76,16 @@ mod tests {
         let client = Client::tracked(super::rocket()).expect("valid rocket instance");
 
         let response = client
-            .get(uri!("/users/test"))
+            .get("/users/before")
             .dispatch();
 
         assert_eq!(response.status(), Status::Found);
         assert!(response.body().is_some());
-        
-        let user = response.into_json::<User>().unwrap();
+
+        let user: User = response.into_json().unwrap();
 
         assert!(user.id.len() == 36);
-        assert_eq!(user.username, "test");
+        assert_eq!(user.username, "before");
     }
 
     #[test]
@@ -95,26 +95,122 @@ mod tests {
         let client = Client::tracked(super::rocket()).expect("valid rocket instance");
 
         let response = client
-            .patch(uri!("/users/test"))
+            .patch("/users/before")
             .header(ContentType::JSON)
             .body(r#"{"username":"after"}"#)
             .dispatch();
 
         assert_eq!(response.status(), Status::Accepted);
         assert!(response.body().is_some());
-        
-        let user = response.into_json::<User>().unwrap();
+
+        let user: User = response.into_json().unwrap();
 
         assert!(user.id.len() == 36);
         assert_eq!(user.username, "after");
     }
 
     #[test]
-    fn f_delete_user() {
+    fn f_get_all_posts() {
         let client = Client::tracked(super::rocket()).expect("valid rocket instance");
 
         let response = client
-            .delete(uri!("/users/after"))
+            .get("/posts")
+            .dispatch();
+
+        assert_eq!(response.status(), Status::Ok);
+        assert!(response.body().is_some());
+        assert_eq!(response.into_string().unwrap(), "[]");
+    }
+
+    #[test]
+    fn g_create_and_delete_post() {
+        use super::database::entities::{User, Post};
+
+        let client = Client::tracked(super::rocket())
+            .expect("valid rocket instance");
+
+        let response = client
+            .get("/users/after")
+            .dispatch();
+
+        let user: User = response.into_json().unwrap();
+
+        let response = client
+            .post("/posts")
+            .header(ContentType::JSON)
+            .body(format!(r#"{{"user_id":"{}","message":"test message"}}"#, user.id))
+            .dispatch();
+
+        assert_eq!(response.status(), Status::Created);
+        assert!(response.body().is_some());
+
+        let post: Post = response.into_json().unwrap();
+
+        assert!(post.id.len() == 36);
+        assert!(post.user_id == user.id);
+        assert_eq!(post.message, "test message");
+
+        let response = client
+            .delete(format!("/posts/{}", post.id))
+            .dispatch();
+
+        assert_eq!(response.status(), Status::Ok);
+        assert!(response.body().is_none());
+    }
+
+    #[test]
+    fn h_get_post() {
+        use super::database::entities::{User, Post};
+
+        let client = Client::tracked(super::rocket())
+            .expect("valid rocket instance");
+
+        let response = client
+            .get("/users/after")
+            .dispatch();
+
+        let user: User = response.into_json().unwrap();
+
+        let response = client
+            .post("/posts")
+            .header(ContentType::JSON)
+            .body(format!(r#"{{"user_id":"{}","message":"test message"}}"#, user.id))
+            .dispatch();
+
+        assert_eq!(response.status(), Status::Created);
+        assert!(response.body().is_some());
+
+        let post: Post = response.into_json().unwrap();
+
+        assert!(post.id.len() == 36);
+        assert!(post.user_id == user.id);
+        assert_eq!(post.message, "test message");
+
+        let response = client
+            .get(format!("/posts/{}", post.id))
+            .dispatch();
+
+        assert_eq!(response.status(), Status::Found);
+        assert!(response.body().is_some());
+
+        let post_found: Post = response.into_json().unwrap();
+
+        assert_eq!(post, post_found);
+
+        let response = client
+            .delete(format!("/posts/{}", post.id))
+            .dispatch();
+
+        assert_eq!(response.status(), Status::Ok);
+        assert!(response.body().is_none());
+    }
+
+    #[test]
+    fn i_delete_user() {
+        let client = Client::tracked(super::rocket()).expect("valid rocket instance");
+
+        let response = client
+            .delete("/users/after")
             .dispatch();
 
         assert_eq!(response.status(), Status::Ok);

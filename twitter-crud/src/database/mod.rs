@@ -77,4 +77,16 @@ pub mod entities {
             Self { id, user_id, message, created_at }
         }
     }
+
+    impl PartialEq for User {
+        fn eq(&self, other: &Self) -> bool {
+            self.id == other.id
+        }
+    }
+
+    impl PartialEq for Post {
+        fn eq(&self, other: &Self) -> bool {
+            self.id == other.id
+        }
+    }
 }
