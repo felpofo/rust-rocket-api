@@ -116,10 +116,10 @@ async fn update_user(mut db: Connection<Pool>, username: String, new: Json<Reque
     Err(Status::NotImplemented)
 }
 
-#[delete("/", format = "json", data = "<user>")]
-async fn delete_user(mut db: Connection<Pool>, user: Json<RequestUserJson>) -> Result<Status, Status> {
+#[delete("/<username>")]
+async fn delete_user(mut db: Connection<Pool>, username: &str) -> Result<Status, Status> {
     let result = sqlx::query("DELETE FROM users WHERE username = $1")
-        .bind(&user.username)
+        .bind(username)
         .execute(&mut *db)
         .await;
 
