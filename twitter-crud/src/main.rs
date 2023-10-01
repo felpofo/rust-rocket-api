@@ -14,6 +14,7 @@ fn rocket() -> _ {
         .attach(database::Pool::init())
         .mount("/", routes![index])
         .mount("/users", routes::Users)
+        .mount("/posts", routes::Posts)
 }
 
 #[cfg(test)]

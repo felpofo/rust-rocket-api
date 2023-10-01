@@ -40,4 +40,35 @@ pub mod entities {
             Self { id, username, created_at }
         }
     }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(crate = "rocket::serde")]
+    pub struct Post {
+        pub id: String,
+        pub user_id: String,
+        pub message: String,
+        pub created_at: NaiveDateTime,
+    }
+
+    impl From<SqliteRow> for Post {
+        fn from(row: SqliteRow) -> Self {
+            let id = row.get("id");
+            let user_id = row.get("user_id");
+            let message = row.get("message");
+            let created_at = NaiveDateTime::parse_from_str(row.get("created_at"), SQLITE_DATE_FORMAT).unwrap();
+
+            Self { id, user_id, message, created_at }
+        }
+    }
+
+    impl Post {
+        pub fn new<Str: Into<String>>(user_id: Str, message: Str) -> Self {
+            let id = Uuid::new_v4().to_string();
+            let user_id = user_id.into();
+            let message = message.into();
+            let created_at = chrono::offset::Local::now().naive_utc();
+
+            Self { id, user_id, message, created_at }
+        }
+    }
 }
