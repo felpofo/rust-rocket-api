@@ -1,0 +1,8 @@
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+    id         CHAR(36)    NOT NULL,
+    username   VARCHAR(32) NOT NULL UNIQUE,
+    created_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);

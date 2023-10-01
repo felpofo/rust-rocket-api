@@ -5,4 +5,7 @@ edition = "2021"
 authors.workspace = true
 
 [dependencies]
-rocket.workspace = true
+rocket = { workspace = true, features = ["serde_json", "json", "uuid"] }
+rocket_db_pools = { workspace = true, features = ["sqlx_sqlite"] }
+chrono = { workspace = true, features = ["serde"] }
+uuid.workspace = true

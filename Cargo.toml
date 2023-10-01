@@ -10,3 +10,8 @@ members = ["twitter-crud"]
 
 [workspace.dependencies]
 rocket = "=0.5.0-rc.3"
+uuid = { version = "1.4.1", features = ["v4"] }
+chrono = "0.4.31"
+rocket_db_pools = "0.1.0-rc.3"
+
+[dependencies]

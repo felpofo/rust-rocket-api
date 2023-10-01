@@ -1,24 +1,29 @@
 #[macro_use] extern crate rocket;
-use rocket::http::Status;
+
+mod routes;
+pub mod database;
 
 #[get("/")]
-fn index() -> (Status, ()) {
-    (Status::Ok, ())
-}
+fn index() {}
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![index])
+    use rocket_db_pools::Database;
+
+    rocket::build()
+        .attach(database::Pool::init())
+        .mount("/", routes![index])
+        .mount("/users", routes::Users)
 }
 
 #[cfg(test)]
 mod tests {
     use super::rocket;
-    use rocket::local::blocking::Client;
     use rocket::http::Status;
+    use rocket::local::blocking::Client;
 
     #[test]
-    fn route_index() {
+    fn index() {
         let client = Client::tracked(rocket()).expect("valid rocket instance");
 
         let response = client.get(uri!("/")).dispatch();

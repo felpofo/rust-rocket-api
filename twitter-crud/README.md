@@ -1,0 +1,1 @@
+To setup the database run `cat schema.sql | sqlite3 twitter.db`
