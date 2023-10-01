@@ -2,7 +2,7 @@ use rocket::Route;
 use rocket::http::{Status, ContentType};
 use rocket::serde::{Serialize, Deserialize};
 use rocket::serde::json::Json;
-use rocket_db_pools::sqlx;
+use rocket_db_pools::{sqlx, Connection};
 use crate::database::Pool;
 use crate::database::entities::Post;
 
@@ -22,9 +22,9 @@ struct RequestPostJson {
 }
 
 #[get("/")]
-async fn posts(db: &Pool) -> Json<Vec<Post>> {
+async fn posts(mut db: Connection<Pool>) -> Json<Vec<Post>> {
     let rows = sqlx::query("SELECT * FROM posts")
-        .fetch_all(&db.0)
+        .fetch_all(&mut *db)
         .await
         .unwrap();
 
@@ -37,10 +37,10 @@ async fn posts(db: &Pool) -> Json<Vec<Post>> {
 }
 
 #[get("/<id>")]
-async fn post(db: &Pool, id: &str) -> (Status, Option<Json<Post>>) {
+async fn post(mut db: Connection<Pool>, id: &str) -> (Status, Option<Json<Post>>) {
     let result = sqlx::query("SELECT * FROM posts WHERE id = $1")
         .bind(id)
-        .fetch_one(&db.0)
+        .fetch_one(&mut *db)
         .await;
 
     if let Ok(row) = result {
@@ -53,7 +53,7 @@ async fn post(db: &Pool, id: &str) -> (Status, Option<Json<Post>>) {
 }
 
 #[post("/", format = "json", data = "<post>")]
-async fn create_post(db: &Pool, post: Json<RequestPostJson>) -> Result<(Status, (ContentType, Json<Post>)), Status> {
+async fn create_post(mut db: Connection<Pool>, post: Json<RequestPostJson>) -> Result<(Status, (ContentType, Json<Post>)), Status> {
     if post.message.len() > 256 {
         return Err(Status::BadRequest);
     }
@@ -64,7 +64,7 @@ async fn create_post(db: &Pool, post: Json<RequestPostJson>) -> Result<(Status, 
         .bind(&post.id)
         .bind(&post.user_id)
         .bind(&post.message)
-        .execute(&db.0)
+        .execute(&mut *db)
         .await;
 
     match result {
@@ -76,10 +76,10 @@ async fn create_post(db: &Pool, post: Json<RequestPostJson>) -> Result<(Status, 
 }
 
 #[delete("/<id>")]
-async fn delete_post(db: &Pool, id: &str) -> Result<Status, Status> {
+async fn delete_post(mut db: Connection<Pool>, id: &str) -> Result<Status, Status> {
     let result = sqlx::query("DELETE FROM posts WHERE id = $1")
         .bind(id)
-        .execute(&db.0)
+        .execute(&mut *db)
         .await;
 
     match result {
